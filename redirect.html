@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>リンクを開いています…</title>
+<style>
+  body {
+    margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: #f5f6f4; color: #67707c; font-size: 14px;
+  }
+  .box { text-align: center; padding: 24px; }
+  .spinner {
+    width: 28px; height: 28px; margin: 0 auto 14px;
+    border: 3px solid #e2e5e1; border-top-color: #0f766e;
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .err { color: #b3423a; display: none; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spinner" id="spinner"></div>
+  <div id="status">リンクを開いています…</div>
+  <div class="err" id="err">リンクを開けませんでした。URLをご確認ください。</div>
+</div>
+
+<script>
+  /* ★★ ここにGAS WebアプリのURL（.../exec）を貼り付けてください ★★ */
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwh-t2kpv6l50SxcIZMmuiTQM657u30VajpOf1w5JZWVnLqjrHPisn7PGJMf9MIxA7CbA/exec';
+
+  (function () {
+    var id = new URLSearchParams(location.search).get('id');
+
+    function fail() {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').style.display = 'none';
+      document.getElementById('err').style.display = 'block';
+    }
+
+    if (!id) { fail(); return; }
+
+    // GASにクリックを記録しつつ遷移先URLを取得 → そのまま移動
+    fetch(GAS_URL + '?id=' + encodeURIComponent(id) + '&api=1')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.url) {
+          location.replace(d.url);
+        } else {
+          fail();
+        }
+      })
+      .catch(fail);
+
+    // 保険: 10秒たっても遷移しなければエラー表示
+    setTimeout(function () {
+      if (!document.hidden) fail();
+    }, 10000);
+  })();
+</script>
+</body>
+</html>
